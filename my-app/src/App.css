@@ -1,8 +1,12 @@
 .App {
   text-align: center;
-  font-family: Arial, Helvetica, sans-serif
+  font-family: Arial, Helvetica, sans-serif;
 }
 
+.bordered {
+  border-top: dotted 1px black;
+  border-bottom: solid 2px black;
+}
 .App-logo {
   height: 40vmin;
   pointer-events: none;

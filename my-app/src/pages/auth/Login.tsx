@@ -22,7 +22,10 @@ function Login() {
       passwordInput: "",
     },
     validationSchema: Yup.object({
-      usernameInput: Yup.string().email("Invalid email").required("Required"),
+      usernameInput: Yup.string()
+        .min(4, "Too short")
+        .email("Invalid email")
+        .required("Required"),
       passwordInput: Yup.string()
         .min(6, "Minimum 6 characters")
         .required("Required"),
@@ -32,7 +35,6 @@ function Login() {
       handleLoginSubmit();
     },
   });
-  console.log(formik);
 
   return (
     <Layout>
@@ -90,10 +92,6 @@ function Login() {
                         { required: true, message: "Vui lòng điền mục này!" },
                       ]}
                     >
-                      {/* {formik.errors.usernameInput &&
-                        formik.touched.usernameInput && (
-                          <p>{formik.errors.usernameInput}</p>
-                        )} */}
                       <Input
                         onBlur={formik.handleBlur}
                         value={formik.values.usernameInput}
@@ -102,6 +100,14 @@ function Login() {
                         style={{ height: "40px", borderRadius: "0" }}
                         placeholder="Email/Số điện thoại/Tên đăng nhập"
                       />
+                      {formik.errors.usernameInput &&
+                        formik.touched.usernameInput && (
+                          <div>
+                            <span className="text-red-600">
+                              {formik.errors.usernameInput}
+                            </span>
+                          </div>
+                        )}
                     </Form.Item>
 
                     <Form.Item<FieldType>
@@ -116,6 +122,14 @@ function Login() {
                         style={{ height: "40px", borderRadius: "0" }}
                         placeholder="Mật khẩu"
                       />
+                      {formik.errors.passwordInput &&
+                        formik.touched.passwordInput && (
+                          <div>
+                            <span className="text-red-600">
+                              {formik.errors.passwordInput}
+                            </span>
+                          </div>
+                        )}
                     </Form.Item>
 
                     <Form.Item>
