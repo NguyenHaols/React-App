@@ -1,4 +1,16 @@
 {
   "greeting": "Hello!",
-  "translate": "React intl : This is english"
+  "translate": "React intl : This is english",
+  "name": "Name",
+  "address": "Address",
+  "options": "Options",
+  "remove": "Remove",
+  "update": "Update",
+  "notEmpty": "can not empty {type}",
+  "password": "Password",
+  "email": "Email",
+  "invalid": "{type} invalid",
+  "tooShort": "Too short",
+  "minimum6": "Minimum 6 characters",
+  "signIn": "Sign In"
 }

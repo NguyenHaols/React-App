@@ -33,7 +33,6 @@ export const userSlice = createSlice({
       state.user.unshift(action.payload);
     },
     updateUser: (state, action: PayloadAction<USER>) => {
-      console.log("redux");
       const index = state.user.findIndex(
         (user) => user.id === action.payload.id
       );

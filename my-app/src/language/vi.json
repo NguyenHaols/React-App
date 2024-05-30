@@ -1,4 +1,16 @@
 {
   "greeting": "Xin chào!",
-  "translate": "React intl : Đây là tiếng việt"
+  "translate": "React intl : Đây là tiếng việt",
+  "name": "tên",
+  "address": "địa chỉ",
+  "options": "Lựa chọn",
+  "remove": "Xóa",
+  "update": "Cập nhập",
+  "notEmpty": "Không được để trống {type}",
+  "password": "mật khẩu",
+  "email": "email",
+  "invalid": "{type} không hợp lệ",
+  "tooShort": "Quá ngắn",
+  "minimum6": "Tối thiểu 6 ký tự",
+  "signIn": "Đăng nhập"
 }

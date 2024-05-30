@@ -1,25 +1,31 @@
 import {
   Button,
+  Checkbox,
+  DatePicker,
   Divider,
   Flex,
   Form,
   Input,
   Layout,
-  MenuProps,
   Modal,
+  Radio,
   Select,
+  Switch,
   Table,
   Typography,
   message,
+  theme,
 } from "antd";
 import axios from "axios";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
-import { useIntl } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import * as Yup from "yup";
+import { getPostStart } from "../../slice/slicePost";
+import { changeMode } from "../../slice/sliceThemeMode";
 import { changeLang } from "../../slice/sliceTranslate";
 import {
   addUser,
@@ -77,28 +83,28 @@ function DefaultLayout() {
   const [shouldShowAddForm, setShouldShowAddForm] = useState(false);
   const [shouldShowUpdateForm, setShouldShowUpdateForm] = useState(false);
   const [userOnUpdate, setUserOnUpdate] = useState<USER>();
-
-  // const users = store.getState().user.user
+  const [postId, setPostId] = useState<string>();
   const users = useAppSelector((state) => state.user.user);
-  // const language = useAppSelector(state => state.translate.lang)
-  // console.log("🚀 ~ DefaultLayout ~ language:", language)
+  const themMode = useAppSelector((state) => state.themeMode);
+  const language = useAppSelector((state) => state.translate);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const intl = useIntl();
   useEffect(() => {
     dispatch(fetchUsers() as any);
   }, [dispatch]);
-
+  let { token } = theme.useToken();
   axios.interceptors.request.use((config) => {
     const authToken = Math.floor(Math.random() * 100 + 1);
     config.headers.Authorization = `Bearer ${authToken}`;
-    console.log("authToken", authToken);
+    // console.log("authToken", authToken);
     return config;
   });
 
   axios.interceptors.response.use(
     (config) => {
       if (config.status === 200) {
-        console.log("if 200");
+        // console.log("if 200");
       }
       if (config.status === 404) {
         console.log("if 404");
@@ -115,7 +121,7 @@ function DefaultLayout() {
 
   const columns = [
     {
-      title: "Name",
+      title: intl.formatMessage({ id: "name" }),
       dataIndex: "name",
       key: "name",
     },
@@ -125,7 +131,7 @@ function DefaultLayout() {
       key: "email",
     },
     {
-      title: "Address",
+      title: intl.formatMessage({ id: "address" }),
       dataIndex: "address",
       key: "address",
       render: (text: Address) => {
@@ -133,7 +139,7 @@ function DefaultLayout() {
       },
     },
     {
-      title: "Options",
+      title: intl.formatMessage({ id: "options" }),
       dataIndex: "",
       key: "",
       render: (user: USER) => {
@@ -144,7 +150,7 @@ function DefaultLayout() {
                 handleRemoveUser(user.id);
               }}
             >
-              Remove
+              {intl.formatMessage({ id: "remove" })}
             </Button>
             <Button
               onClick={(e) => {
@@ -153,30 +159,13 @@ function DefaultLayout() {
                 setUserOnUpdate(user);
               }}
             >
-              Update
+              {intl.formatMessage({ id: "update" })}
             </Button>
           </Flex>
         );
       },
     },
   ];
-
-  type MenuItem = Required<MenuProps>["items"][number];
-  const items: MenuItem[] = (users ?? []).map((user: USER) => {
-    return {
-      key: user.id.toString(),
-      label: user.username,
-      children: [
-        {
-          key: user.email,
-          label: user.address?.city,
-        },
-      ],
-    };
-  });
-  const onClick: MenuProps["onClick"] = (e) => {
-    console.log("click ", e);
-  };
 
   const handleRemoveUser = (userId: number) => {
     dispatch(removeUserById(userId));
@@ -268,7 +257,21 @@ function DefaultLayout() {
     message.success("User updated successfully");
   };
 
-  const intl = useIntl();
+  const handleChangeModeTheme = (e: any) => {
+    if (e === true) {
+      dispatch(changeMode("dark"));
+    } else {
+      dispatch(changeMode("light"));
+    }
+  };
+
+  const getPostwithSaga = () => {
+    dispatch(getPostStart());
+  };
+
+  const getPostByIdwithSaga = () => {
+    // dispatch(getPostByIdStart(postId));
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -324,22 +327,29 @@ function DefaultLayout() {
       <Layout>
         <Header>
           <Flex justify="space-between" align="center">
-            <Text className="text-3xl" style={{ color: "red" }}>
+            <Text
+              className="text-3xl leading-[64px]"
+              style={{ color: token.colorPrimary }}
+            >
               Header
             </Text>
             <Text
               onClick={() => navigate("/login")}
-              className="text-xl text-[white] cursor-pointer"
+              className="text-xl text-[white] cursor-pointer leading-[64px]"
+              style={{ color: token.colorPrimary }}
             >
               LogOut
             </Text>
           </Flex>
         </Header>
-        <Content className="h-[100vh]">
-          <Title>{intl.formatMessage({ id: "translate" })}</Title>
+
+        <Content className="h-[140vh]">
+          <Title style={{ color: token.colorPrimary }}>
+            {intl.formatMessage({ id: "translate" })}
+          </Title>
           <Select
             className="ml-5"
-            defaultValue={"vi"}
+            defaultValue={language.lang}
             onChange={handleChangLanguage}
             options={[
               { value: "vi", label: "VietNam" },
@@ -352,7 +362,7 @@ function DefaultLayout() {
             <Flex className="flex-col" justify="center" align="center">
               <Table
                 style={{ width: "70%" }}
-                pagination={{ pageSize: 5 }}
+                pagination={{ pageSize: 5, position: ["bottomCenter"] }}
                 rowKey={(user) => user.id.toString()}
                 dataSource={users}
                 columns={columns}
@@ -369,48 +379,75 @@ function DefaultLayout() {
                 onCancel={() => setShouldShowAddForm(false)}
               >
                 <Form onFinish={formik.handleSubmit}>
-                  <Form.Item>
+                  <Form.Item
+                    name="usernameInput"
+                    rules={[
+                      {
+                        required: true,
+                        message: (
+                          <FormattedMessage
+                            id="notEmpty"
+                            values={{ type: <FormattedMessage id="name" /> }}
+                          />
+                        ),
+                      },
+                      { min: 5, message: <FormattedMessage id="tooShort" /> },
+                    ]}
+                  >
                     <Input
-                      name="usernameInput"
                       onChange={formik.handleChange}
                       placeholder="Name"
                     ></Input>
-                    {formik.errors.usernameInput &&
-                      formik.touched.usernameInput && (
-                        <div>
-                          <span className="text-red-600">
-                            {formik.errors.usernameInput}
-                          </span>
-                        </div>
-                      )}
                   </Form.Item>
-                  <Form.Item>
+                  <Form.Item
+                    name="emailInput"
+                    validateFirst
+                    rules={[
+                      {
+                        required: true,
+                        message: (
+                          <FormattedMessage
+                            id="notEmpty"
+                            values={{ type: <FormattedMessage id="email" /> }}
+                          />
+                        ),
+                      },
+                      { min: 5, message: <FormattedMessage id="tooShort" /> },
+                      {
+                        pattern: new RegExp(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/),
+                        message: (
+                          <FormattedMessage
+                            id="invalid"
+                            values={{ type: <FormattedMessage id="email" /> }}
+                          />
+                        ),
+                      },
+                    ]}
+                  >
                     <Input
-                      name="emailInput"
                       onChange={formik.handleChange}
                       placeholder="Email"
                     ></Input>
-                    {formik.errors.emailInput && formik.touched.emailInput && (
-                      <div>
-                        <span className="text-red-600">
-                          {formik.errors.emailInput}
-                        </span>
-                      </div>
-                    )}
                   </Form.Item>
-                  <Form.Item name="address.city">
+                  <Form.Item
+                    name="addressInput"
+                    rules={[
+                      {
+                        required: true,
+                        message: (
+                          <FormattedMessage
+                            id="notEmpty"
+                            values={{ type: <FormattedMessage id="address" /> }}
+                          />
+                        ),
+                      },
+                      { min: 5, message: <FormattedMessage id="tooShort" /> },
+                    ]}
+                  >
                     <Input
                       onChange={formik.handleChange}
                       placeholder="Address"
                     ></Input>
-                    {formik.errors.addressInput &&
-                      formik.touched.addressInput && (
-                        <div>
-                          <span className="text-red-600">
-                            {formik.errors.addressInput}
-                          </span>
-                        </div>
-                      )}
                   </Form.Item>
                   <Form.Item>
                     <Button className="mr-5" type="primary" htmlType="submit">
@@ -430,8 +467,16 @@ function DefaultLayout() {
                   <Form.Item
                     name="name"
                     rules={[
-                      { required: true, message: "Required" },
-                      { min: 5, message: "Too short" },
+                      {
+                        required: true,
+                        message: (
+                          <FormattedMessage
+                            id="notEmpty"
+                            values={{ type: <FormattedMessage id="name" /> }}
+                          />
+                        ),
+                      },
+                      { min: 5, message: <FormattedMessage id="tooShort" /> },
                     ]}
                   >
                     <Input
@@ -444,11 +489,24 @@ function DefaultLayout() {
                     validateFirst
                     name="email"
                     rules={[
-                      { required: true, message: "Required" },
-                      { min: 5, message: "Too short" },
+                      {
+                        required: true,
+                        message: (
+                          <FormattedMessage
+                            id="notEmpty"
+                            values={{ type: <FormattedMessage id="email" /> }}
+                          />
+                        ),
+                      },
+                      { min: 5, message: <FormattedMessage id="tooShort" /> },
                       {
                         pattern: new RegExp(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/),
-                        message: "Invalid email",
+                        message: (
+                          <FormattedMessage
+                            id="invalid"
+                            values={{ type: <FormattedMessage id="email" /> }}
+                          />
+                        ),
                       },
                     ]}
                   >
@@ -461,8 +519,16 @@ function DefaultLayout() {
                   <Form.Item
                     name="city"
                     rules={[
-                      { required: true, message: "Required" },
-                      { min: 5, message: "Too short" },
+                      {
+                        required: true,
+                        message: (
+                          <FormattedMessage
+                            id="notEmpty"
+                            values={{ type: <FormattedMessage id="address" /> }}
+                          />
+                        ),
+                      },
+                      { min: 5, message: <FormattedMessage id="tooShort" /> },
                     ]}
                   >
                     <Input
@@ -480,14 +546,33 @@ function DefaultLayout() {
               </Modal>
             </Flex>
           </div>
-          {/* <Menu
-            onClick={onClick}
-            style={{ width: 256 }}
-            // defaultSelectedKeys={['1']}
-            defaultOpenKeys={["sub1"]}
-            mode="inline"
-            items={items}
-          /> */}
+          <Divider>Theme mode</Divider>
+
+          <Flex justify="center" align="center" vertical>
+            <Switch
+              checked={themMode.mode === "dark" ? true : false}
+              className="mb-2"
+              onChange={handleChangeModeTheme}
+            ></Switch>
+            <Button type="primary">Button</Button>
+            <Radio checked className="py-5">
+              Color theme
+            </Radio>
+            <Checkbox checked className="py-5">
+              Color theme
+            </Checkbox>
+            <DatePicker></DatePicker>
+          </Flex>
+
+          <Divider> Child of defaultLayout </Divider>
+          <Outlet />
+
+          <Divider>Redux saga</Divider>
+          <Flex justify="center">
+            <Button type="primary" onClick={getPostwithSaga}>
+              get posts
+            </Button>
+          </Flex>
         </Content>
         <Footer className="text-3xl bg-[#001529]">
           <Text className="text-[#fff] text-2xl">footer</Text>

@@ -1,8 +1,20 @@
 import { ShoppingCartOutlined } from "@ant-design/icons";
-import { Button, Divider, Flex, Form, Input, Layout, theme } from "antd";
+import {
+  Button,
+  Divider,
+  Flex,
+  Form,
+  Input,
+  Layout,
+  Select,
+  theme,
+} from "antd";
 import { useFormik } from "formik";
+import { FormattedMessage, useIntl } from "react-intl";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import * as Yup from "yup";
+import { changeLang } from "../../slice/sliceTranslate";
+import { useAppSelector } from "../../store";
 function Login() {
   const { Header, Footer, Content } = Layout;
   const { token } = theme.useToken();
@@ -10,6 +22,8 @@ function Login() {
   const handleLoginSubmit = () => {
     navigate("/");
   };
+  const intl = useIntl();
+  const language = useAppSelector((state) => state.translate);
 
   type FieldType = {
     username?: string;
@@ -21,25 +35,56 @@ function Login() {
       usernameInput: "",
       passwordInput: "",
     },
-    validationSchema: Yup.object({
-      usernameInput: Yup.string()
-        .min(4, "Too short")
-        .email("Invalid email")
-        .required("Required"),
-      passwordInput: Yup.string()
-        .min(6, "Minimum 6 characters")
-        .required("Required"),
-    }),
+    validateOnChange: true,
+    validateOnBlur: true,
+    // validationSchema: Yup.object({
+    //   usernameInput: Yup.string()
+    //     .min(4, intl.formatMessage({ id: "tooShort" }))
+    //     .email(
+    //       intl.formatMessage(
+    //         { id: "invalid" },
+    //         { type: intl.formatMessage({ id: "email" }) }
+    //       )
+    //     )
+    //     .required(
+    //       intl.formatMessage(
+    //         { id: "notEmpty" },
+    //         { type: intl.formatMessage({ id: "email" }) }
+    //       )
+    //     ),
+    //   passwordInput: Yup.string()
+    //     .min(6, intl.formatMessage({ id: "minimum6" }))
+    //     .required(
+    //       intl.formatMessage(
+    //         { id: "notEmpty" },
+    //         { type: intl.formatMessage({ id: "password" }) }
+    //       )
+    //     ),
+    // }),
     onSubmit: (values) => {
       console.log(values);
       handleLoginSubmit();
     },
   });
+  const dispatch = useDispatch();
+
+  const handleChangLanguage = (value: string) => {
+    dispatch(changeLang(value));
+  };
 
   return (
     <Layout>
       <Header className="h-20 bg-white">
         <Flex justify="space-between">
+          <Select
+            className="ml-5"
+            defaultValue={language.lang}
+            onChange={handleChangLanguage}
+            options={[
+              { value: "vi", label: "VietNam" },
+              { value: "en", label: "English" },
+            ]}
+          ></Select>
           <Flex align="center">
             <Flex className="text-xl  font-semibold m-5">
               <ShoppingCartOutlined
@@ -56,7 +101,11 @@ function Login() {
                 Shopee
               </span>
             </Flex>
-            <div className="text-[24px]">Đăng nhập</div>
+            <div className="text-[24px] font-bold ">
+              <span className="text-[#333]">
+                {intl.formatMessage({ id: "signIn" })}
+              </span>
+            </div>
           </Flex>
           <a href="#" style={{ lineHeight: "68px", color: token.colorPrimary }}>
             Bạn cần giúp đỡ?
@@ -64,7 +113,7 @@ function Login() {
         </Flex>
       </Header>
       <Content>
-        <div className={`bg-[#fe5723] w-full h-[600px] `}>
+        <div className={`bg-[#fe5723] w-full h-[92vh] `}>
           <Flex className="h-[100%]" justify="center" align="center">
             <Flex className=" flex-col mr-48" justify="center" align="center">
               <div className="w-[300px] h-[300px]">
@@ -88,48 +137,60 @@ function Login() {
                 <div className="px-[30px]">
                   <Form onFinish={formik.handleSubmit} name="login">
                     <Form.Item<FieldType>
+                      name="username"
                       rules={[
-                        { required: true, message: "Vui lòng điền mục này!" },
+                        {
+                          required: true,
+                          message: (
+                            <FormattedMessage
+                              id="notEmpty"
+                              values={{ type: "email" }}
+                            />
+                          ),
+                        },
+                        {
+                          pattern: new RegExp(
+                            /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/
+                          ),
+                          message: (
+                            <FormattedMessage
+                              id="invalid"
+                              values={{ type: <FormattedMessage id="email" /> }}
+                            />
+                          ),
+                        },
                       ]}
                     >
                       <Input
-                        onBlur={formik.handleBlur}
                         value={formik.values.usernameInput}
-                        name="usernameInput"
                         onChange={formik.handleChange}
                         style={{ height: "40px", borderRadius: "0" }}
                         placeholder="Email/Số điện thoại/Tên đăng nhập"
                       />
-                      {formik.errors.usernameInput &&
-                        formik.touched.usernameInput && (
-                          <div>
-                            <span className="text-red-600">
-                              {formik.errors.usernameInput}
-                            </span>
-                          </div>
-                        )}
                     </Form.Item>
 
                     <Form.Item<FieldType>
+                      name="password"
                       rules={[
-                        { required: true, message: "Vui lòng điền mục này!" },
+                        {
+                          required: true,
+                          message: (
+                            <FormattedMessage
+                              id="notEmpty"
+                              values={{
+                                type: <FormattedMessage id="password" />,
+                              }}
+                            />
+                          ),
+                        },
                       ]}
                     >
                       <Input.Password
                         value={formik.values.passwordInput}
-                        name="passwordInput"
                         onChange={formik.handleChange}
                         style={{ height: "40px", borderRadius: "0" }}
                         placeholder="Mật khẩu"
                       />
-                      {formik.errors.passwordInput &&
-                        formik.touched.passwordInput && (
-                          <div>
-                            <span className="text-red-600">
-                              {formik.errors.passwordInput}
-                            </span>
-                          </div>
-                        )}
                     </Form.Item>
 
                     <Form.Item>
@@ -160,6 +221,7 @@ function Login() {
                       className="w-[50%] h-[40px] rounded-none mr-1 flex justify-center items-center"
                       icon={
                         <img
+                          alt="img"
                           className="w-[20px]"
                           src={require("../../assets/img/facebookPNG.png")}
                         ></img>
@@ -171,6 +233,7 @@ function Login() {
                       className="w-[50%] h-[40px] rounded-none ml-1 flex justify-center items-center"
                       icon={
                         <img
+                          alt="img"
                           className="w-[20px]"
                           src={require("../../assets/img/googlePNG.png")}
                         ></img>
@@ -194,7 +257,7 @@ function Login() {
           </Flex>
         </div>
       </Content>
-      <Footer>
+      {/* <Footer>
         <Flex justify="center">
           <div className="flex flex-col mr-20">
             <b>Chăm sóc khách hàng</b>
@@ -305,7 +368,7 @@ function Login() {
             </Button>
           </div>
         </Flex>
-      </Footer>
+      </Footer> */}
     </Layout>
   );
 }
